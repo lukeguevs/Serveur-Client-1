@@ -21,6 +21,8 @@ public class Server {
 	}
 	
 	public static void serverLaunch()  {
+		
+	try {
 		System.out.print("Entrez l'addresse IP du serveur: \n");
 		
 		while(true) {
@@ -37,17 +39,13 @@ public class Server {
 			System.out.print("Port invalide. Réessayez: ");
 		}
 		
-		try {
+
 			serverSocket = new ServerSocket();
 			serverSocket.setReuseAddress(true);
 			InetAddress serverIp = InetAddress.getByName(ipAddress);
 			serverSocket.bind(new InetSocketAddress(serverIp, port));
 			System.out.format("Le serveur roule sur l'addresse IP %s et le port %d", ipAddress, port);
 			running = true;
-		}
-		catch (IOException e) {
-			 System.out.println("Erreur lors du démarrage du serveur: " + e.getMessage());
-		}
 		
 		new Thread(() -> 
 		{
@@ -58,7 +56,15 @@ public class Server {
 				}
 			}
 		}).start();
-	
+		
+		while(running) {
+			serverSocket.accept();
+;		}
+	}
+		
+		catch (IOException e) {
+		System.out.println("Erreur lors du démarrage du serveur: " + e.getMessage());
+		}
 	}
 	
 	public static void closeServer() {
