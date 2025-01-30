@@ -13,26 +13,33 @@ public class ChatHistory {
 	private static BufferedReader bufferReader;
 	
 	
+	ChatHistory(){
+		messages = new ArrayList<>();
+		loadMessages();
+	}
+	
 	
 	private static void loadMessages() {
 		
 		try {
 			bufferReader = new BufferedReader(new FileReader(MESSAGE_FILE));
 			String line;
-			
-			
+			while((line = bufferReader.readLine()) != null && maxMessages > 0) {
+				messages.add(line);
+				maxMessages--;
+			}
 		}
 		catch(IOException e) {
-			System.out.println("Erreur lors de la recherche des messsages: " + e.getMessage());
+			System.err.println("Erreur lors de la recherche des messsages: " + e.getMessage());
 			
 		}
 		
 	}
 	
-	private static void printMessages() {
+	public static void printMessages() {
 		
-		
-		
+		for (String message: messages) 
+			System.err.println(messages + "\n");
 		
 	}
 	

@@ -1,18 +1,19 @@
 package server;
 import java.util.*;
 import java.io.*;
+import java.net.*;
 
 //Ceci va etre la classe qu'on va utiliser pour gérer les usernames et passwords des clients, 
 //incluant la verification de l'utilisateur ainsi que la transmission dans un fichier qui peut log les changements
 
-public class ClientManager {
+public class LoginManager {
 	
 	private static final String USER_FILE = "usagers.csv";
 	private static Map<String, String> users;
 	private static BufferedWriter bufferWriter;
 	private static BufferedReader bufferReader;
 	
-	public ClientManager() {
+	public LoginManager() {
 		users = new HashMap<>();
 		loadUsers();
 	}
@@ -29,7 +30,7 @@ public class ClientManager {
 			}
 			
 		}catch (IOException e){
-			System.out.println("Erreur lors du loading des usagers: " + e.getMessage());
+			System.err.println("Erreur lors du loading des usagers: " + e.getMessage());
 		}
 		
 	}
@@ -51,7 +52,7 @@ public class ClientManager {
 			bufferWriter.newLine();
 			
 		} catch(IOException e){
-			System.out.println("Erreur lors de la sauvegarde des usagers: " + e.getMessage());
+			System.err.println("Erreur lors de la sauvegarde des usagers: " + e.getMessage());
 		}
 		
 	}
