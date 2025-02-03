@@ -1,6 +1,6 @@
 package server;
 import java.net.*;
-import java.util.Scanner;
+import java.util.*;
 import java.io.*;
 import java.util.regex.Pattern;
 
@@ -14,9 +14,11 @@ public class Server {
 	static String ipAddress;
 	static int port;
 	private static boolean running = true;
+	private static LoginManager loginManager;
 	
 	
 	public static void main (String[] args){
+		loginManager = new LoginManager();
 		serverLaunch();
 	}
 	
@@ -44,7 +46,7 @@ public class Server {
 			serverSocket.setReuseAddress(true);
 			InetAddress serverIp = InetAddress.getByName(ipAddress);
 			serverSocket.bind(new InetSocketAddress(serverIp, port));
-			System.out.format("Le serveur roule sur l'addresse IP %s et le port %d", ipAddress, port);
+			System.out.format("Le serveur roule sur l'addresse IP %s et le port %d\n", ipAddress, port);
 			running = true;
 		
 		new Thread(() -> 
@@ -57,9 +59,39 @@ public class Server {
 			}
 		}).start();
 		
-		while(running) {
-			serverSocket.accept();
-;		}
+		while (running) {
+		    Socket clientSocket = serverSocket.accept();
+		    BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+		    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+
+		    System.out.println("Nouveau client connecté, réception de l'authentification...");
+		    String username = reader.readLine();
+		    String password = reader.readLine();
+
+		    boolean authenticated = loginManager.authenticate(username, password);
+		    new Thread(() -> {
+		        if (authenticated) {
+		            System.out.println("Utilisateur " + username + " connecté.");
+
+		            try {
+		                writer.write("AUTH_SUCCESS\n");
+		                writer.flush(); 
+		            } catch (IOException e) {
+		                e.printStackTrace();
+		            }
+
+		        } else {
+		            System.out.println("Échec de l'authentification pour " + username);
+		            try {
+		                writer.write("AUTH_FAILED\n");
+		                writer.flush();
+		                clientSocket.close(); 
+		            } catch (IOException e) {
+		                e.printStackTrace();
+		            }
+		        }
+		    }).start();
+		}
 	}
 		
 		catch (IOException e) {
