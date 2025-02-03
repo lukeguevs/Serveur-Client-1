@@ -39,12 +39,24 @@ public class ChatHistory {
 	public static void printMessages() {
 		
 		for (String message: messages) 
-			System.err.println(messages + "\n");
+			System.err.println(message + "\n");
 		
 	}
 	
 	public static void getAllMessages() { //méthode pour aller chercher tous les messages.
-		
+		try {
+			messages.clear();
+			maxMessages = 15;
+			bufferReader = new BufferedReader(new FileReader(MESSAGE_FILE));
+			String line;
+			while((line = bufferReader.readLine()) != null) {
+				messages.add(line);
+			}
+		}
+		catch(IOException e) {
+			System.err.println("Erreur lors de la recherche des messsages: " + e.getMessage());
+			
+		}
 	}
 	
 

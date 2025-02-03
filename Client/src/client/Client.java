@@ -13,43 +13,52 @@ public class Client {
 	static Scanner scanner = new Scanner(System.in);
 	private static String ipAddress;
 	private static int port;
-	private static boolean running = true;
+	private static boolean running = false;
+	static PrintWriter printWriter;
+	static BufferedReader reader;
+	private static String username;
+	private static String password;
+	private static int LOGINCOUNTER = 3;
 	
 	public static void main (String[] args){
-		serverLaunch();
+		connectToServer();
 	}
 	
-	public static void serverLaunch()  {
+	public static void connectToServer()  {
 		
 		try {
-			System.out.print("Entrez l'addresse IP du serveur: \n");
+			System.out.println("Entrez l'addresse IP du serveur: \n");
 			
 			while(true) {
 				ipAddress = scanner.nextLine();
 				if (Pattern.matches(IP_REGEX, ipAddress)) break;
-				System.out.print("Addresse IP invalide. Réessayez: \n");
+				System.out.println("Addresse IP invalide. Réessayez: \n");
 			}
 			
 			System.out.print("Entrez un port entre 5000 et 5050: ");
 			
 			while(true) {
 				port = scanner.nextInt();
+				scanner.nextLine();
 				if (5000 <= port && port <= 5050) break;
-				System.out.print("Port invalide. Réessayez: ");
+				System.out.println("Port invalide. Réessayez: ");
 			}
 			
 
 				socket = new Socket();
 				socket.setReuseAddress(true);
 				InetAddress serverIp = InetAddress.getByName(ipAddress);
-				socket.bind(new InetSocketAddress(serverIp, port));
-				System.out.format("Le serveur roule sur l'addresse IP %s et le port %d", ipAddress, port);
+				socket.connect(new InetSocketAddress(serverIp, port));
+				System.out.format("Le serveur client roule sur l'addresse IP %s et le port %d \n", ipAddress, port);
+				System.out.println("Tentative d'authentification...");
 				running = true;
+				
 			
 			new Thread(() -> 
 			{
+				Scanner quitScanner = new Scanner(System.in);
 				while(true) {
-					if (scanner.nextLine().equalsIgnoreCase("/quit")) {
+					if (quitScanner.nextLine().equalsIgnoreCase("/quit")) {
 						try {
 							socket.close();
 						} catch (IOException e) {
@@ -59,13 +68,92 @@ public class Client {
 				}
 			}).start();
 			
-			while(running) {
-	;		}
+			
+			 boolean authenticated = false;
+	            while (LOGINCOUNTER > 0) {
+	                authenticated = authenticate();
+	                if (authenticated) {
+	                    LOGINCOUNTER = 3;
+	                    break;
+	                }
+	                LOGINCOUNTER--;
+	                System.out.format("Échec de l'authentification. %d essais restant(s).\n", LOGINCOUNTER);
+	            }
+
+	            if (authenticated) {
+	                new Thread(Client::receiveMessages).start();
+	                sendMessages();
+	            } else {
+	                System.out.println("Trop de tentatives échouées. Déconnexion...");
+	                socket.close();
+	            }
+			
 		}
 			
 			catch (IOException e) {
 			System.out.println("Erreur lors du démarrage du serveur: " + e.getMessage());
 			}
 		}
+	
+	
+	
+	public static boolean authenticate() {
+		
+		try {
+			System.out.print("Nom d'utilisateur: ");
+            username = scanner.nextLine();
+            System.out.print("Mot de passe: ");
+            password = scanner.nextLine();
+            
+            printWriter.println(username);
+            printWriter.println(password);
+            
+            String response = reader.readLine();
+            return response.equals("AUTH_SUCCESS");
+           
+		}
+		catch(IOException e) {
+			System.out.println("Erreur lors de l'authentification au serveur: " + e.getMessage());
+			return false;
+			
+		}
+	}
+	
+	public static void sendMessages() {
+		
+		try{
+			printWriter = new PrintWriter(socket.getOutputStream(), true);
+			String userMessage;
+			while (true) {
+				System.out.println("> ");
+				userMessage = scanner.nextLine();
+				printWriter.println(userMessage);
+			}
+			
+		}
+		catch (IOException e) {
+			System.out.println("Erreur lors de l'envoi du message: " + e.getMessage());
+		}
+		
+	}
+	
+	public static void receiveMessages() {
+		try {
+			
+			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			String message;
+			while((message = reader.readLine()) != null) {
+				System.out.println("\n" + message);
+				System.out.print("> ");
+			}
+			
+		}
+		catch(IOException e) {
+			System.out.println("Erreur lors de la réception du message: " + e.getMessage());
+			running = false;
+		}
+	}
+	
+	
 	
 }
