@@ -12,7 +12,7 @@ public class Client {
 	        "^((25[0-5]|2[0-4][0-9]|1?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|1?[0-9][0-9]?)$";
 	
 	private static Socket socket;
-	static Scanner scanner = new Scanner(System.in);
+	private static Console console = System.console();
 	private static String ipAddress;
 	private static int port;
 	static PrintWriter printWriter;
@@ -29,10 +29,10 @@ public class Client {
 	public static void connectToServer()  {
 		
 		try {
-			System.out.println("Entrez l'addresse IP du serveur: \n");
+			System.out.println("Entrez l'addresse IP du serveur: ");
 			
 			while(true) {
-				ipAddress = scanner.nextLine();
+				ipAddress = console.readLine();
 				if (Pattern.matches(IP_REGEX, ipAddress)) break;
 				System.out.println("Addresse IP invalide. Réessayez: \n");
 			}
@@ -40,13 +40,11 @@ public class Client {
 			System.out.print("Entrez un port entre 5000 et 5050: ");
 			
 			while(true) {
-				port = scanner.nextInt();
-				scanner.nextLine();
+				port = Integer.parseInt(console.readLine());
 				if (5000 <= port && port <= 5050) break;
 				System.out.println("Port invalide. Réessayez: ");
 			}
-			
-
+		
 				socket = new Socket();
 				socket.setReuseAddress(true);
 				InetAddress serverIp = InetAddress.getByName(ipAddress);
@@ -58,20 +56,9 @@ public class Client {
 
 				
 			
-			new Thread(() -> 
-			{
-				Scanner quitScanner = new Scanner(System.in);
-				while(true) {
-					if (quitScanner.nextLine().equalsIgnoreCase("/quit")) {
-						try {
-							socket.close();
-							quitScanner.close();
-							} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
-				}
-			}).start();
+			
+			quitWait();
+		
 			
 			
 			 boolean authenticated = false;
@@ -82,7 +69,7 @@ public class Client {
 	                    break;
 	                }
 	                LOGINCOUNTER--;
-	                System.out.format("\nÉchec de l'authentification. %d essais restant(s).\n", LOGINCOUNTER);
+	                System.out.format("\n Erreur dans la saisie du mot de passe. %d essais restant(s).\n", LOGINCOUNTER);
 	            }
 
 	            if (authenticated) {
@@ -97,21 +84,22 @@ public class Client {
 			
 			catch (IOException e) {
 			System.out.println("Erreur lors du démarrage du serveur: " + e.getMessage());
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
 	
 	
 	
-	public static boolean authenticate() {
+	public static boolean authenticate() throws InterruptedException {
 		
 		try {
-			System.out.print("Nom d'utilisateur: ");
-            username = scanner.nextLine();
-            System.out.print("Mot de passe: ");
-            password = scanner.nextLine();
+			username = console.readLine("Nom d'utilisateur: ");
+			password = new String(console.readPassword("Mot de passe: "));
             
-            printWriter.println(username);
-            printWriter.println(password);
+            
+            printWriter.println(username + "," + password);
+            printWriter.flush();
             
             String response = reader.readLine();
             return response.equals("AUTH_SUCCESS");
@@ -134,7 +122,7 @@ public class Client {
 	        String userMessage;
 	        while (true) {
 	            System.out.print(">\n");
-	            userMessage = scanner.nextLine();
+	            userMessage = console.readLine();
 	            String timestamp = LocalDateTime.now().format(formatter);
 	            printWriter.format("[%s - %s:%d - %s]: %s",username, ipAddress, port, timestamp, userMessage);
 
@@ -153,13 +141,29 @@ public class Client {
 			String message;
 			while((message = reader.readLine()) != null) {
 				System.out.println("\n" + message);
-				System.out.print("> ");
 			}
 			
 		}
 		catch(IOException e) {
 			System.out.println("Erreur lors de la réception du message: " + e.getMessage());
 		}
+	}
+	
+	public static void quitWait() {
+		new Thread(() -> 
+		{
+			
+			while(true) {
+				if (console.readLine().equalsIgnoreCase("/quit")) {
+					try {
+						socket.close();
+						} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}).start();
+		
 	}
 	
 	

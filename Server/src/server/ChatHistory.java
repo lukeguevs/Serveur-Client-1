@@ -21,9 +21,8 @@ public class ChatHistory {
 		try {
 			bufferReader = new BufferedReader(new FileReader(MESSAGE_FILE));
 			String line;
-			while((line = bufferReader.readLine()) != null && maxMessages > 0) {
+			while((line = bufferReader.readLine()) != null) {
 				messages.add(line);
-				maxMessages--;
 			}
 		}
 		catch(IOException e) {
@@ -43,7 +42,6 @@ public class ChatHistory {
 	public static void getAllMessages() {
 		try {
 			messages.clear();
-			maxMessages = 15;
 			bufferReader = new BufferedReader(new FileReader(MESSAGE_FILE));
 			String line;
 			while((line = bufferReader.readLine()) != null) {
@@ -53,6 +51,18 @@ public class ChatHistory {
 		catch(IOException e) {
 			System.err.println("Erreur lors de la recherche des messsages: " + e.getMessage());
 			
+		}
+	}
+	
+	public void addMessage(String message) {
+		try {
+			bufferWriter = new BufferedWriter(new FileWriter(MESSAGE_FILE, true));
+			bufferWriter.write(message);
+			bufferWriter.newLine();
+		}
+		
+		catch(IOException e) {
+			System.err.println("Erreur lors de l'ajout d'un message: " + e.getMessage());
 		}
 	}
 	
