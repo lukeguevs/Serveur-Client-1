@@ -123,6 +123,11 @@ public class Client {
 	        while (true) {
 	            System.out.print(">\n");
 	            userMessage = console.readLine();
+	            
+	            if (userMessage.length() > 200) {
+	            	System.out.println("Erreur: le message ne peut pas dépasser 200 caractères");
+	            	continue;
+	            }
 	            String timestamp = LocalDateTime.now().format(formatter);
 	            printWriter.format("[%s - %s:%d - %s]: %s",username, ipAddress, port, timestamp, userMessage);
 
