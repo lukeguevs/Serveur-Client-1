@@ -12,27 +12,28 @@ public class Client {
 	        "^((25[0-5]|2[0-4][0-9]|1?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|1?[0-9][0-9]?)$";
 	
 	private static Socket socket;
-	private static Console console = System.console();
+	private static BufferedReader inputReader = new BufferedReader(new InputStreamReader(System.in));
 	private static String ipAddress;
 	private static int port;
 	static PrintWriter printWriter;
 	static BufferedReader reader;
 	private static String username;
 	private static String password;
-	private static int LOGINCOUNTER = 3;
+	
 	static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd@HH:mm:ss");
 	
-	public static void main (String[] args){
+	public static void main (String[] args) throws IOException{
 		connectToServer();
+		quitWait();
 	}
 	
-	public static void connectToServer()  {
+	public static void connectToServer() throws IOException  {
 		
 		try {
 			System.out.println("Entrez l'addresse IP du serveur: ");
 			
 			while(true) {
-				ipAddress = console.readLine();
+				ipAddress = inputReader.readLine();
 				if (Pattern.matches(IP_REGEX, ipAddress)) break;
 				System.out.println("Addresse IP invalide. Réessayez: \n");
 			}
@@ -40,7 +41,7 @@ public class Client {
 			System.out.print("Entrez un port entre 5000 et 5050: ");
 			
 			while(true) {
-				port = Integer.parseInt(console.readLine());
+				port = Integer.parseInt(inputReader.readLine());
 				if (5000 <= port && port <= 5050) break;
 				System.out.println("Port invalide. Réessayez: ");
 			}
@@ -55,54 +56,42 @@ public class Client {
 				reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 				
-			
-			
-			quitWait();
-		
-			
-			
-			 boolean authenticated = false;
-	            while (LOGINCOUNTER > 0) {
-	                authenticated = authenticate();
-	                if (authenticated) {
-	                    LOGINCOUNTER = 3;
-	                    break;
-	                }
-	                LOGINCOUNTER--;
-	                System.out.format("\n Erreur dans la saisie du mot de passe. %d essais restant(s).\n", LOGINCOUNTER);
-	            }
-
+				while(true) {
+					boolean authenticated = authenticate();
+				
 	            if (authenticated) {
+	            	System.out.print("Vous êtes connecté.e au serveur.\n");
 	                new Thread(Client::receiveMessages).start();
 	                sendMessages();
+	                break;
 	            } else {
-	                System.out.println("\nTrop de tentatives échouées. Déconnexion...");
+	                System.out.println("Mauvais mot de passe, déconnexion...");
 	                socket.close();
+	                break;
 	            }
-			
-		}
+			}	
+		 }
 			
 			catch (IOException e) {
 			System.out.println("Erreur lors du démarrage du serveur: " + e.getMessage());
 			} catch (InterruptedException e) {
 				e.printStackTrace();
-			}
+				socket.close();
 		}
+	}
+	
 	
 	
 	
 	public static boolean authenticate() throws InterruptedException {
 		
 		try {
-			username = console.readLine("Nom d'utilisateur: ");
-			password = new String(console.readPassword("Mot de passe: "));
-            
-            
+            System.out.print("Nom d'utilisateur: ");
+            username = inputReader.readLine();
+            System.out.print("Mot de passe: ");
+            password = inputReader.readLine();
             printWriter.println(username + "," + password);
-            printWriter.flush();
-            
-            String response = reader.readLine();
-            return response.equals("AUTH_SUCCESS");
+            return reader.readLine().equals("AUTH_SUCCESS");
            
 		}
 		catch(IOException e) {
@@ -122,7 +111,7 @@ public class Client {
 	        String userMessage;
 	        while (true) {
 	            System.out.print(">\n");
-	            userMessage = console.readLine();
+	            userMessage = inputReader.readLine();
 	            String timestamp = LocalDateTime.now().format(formatter);
 	            printWriter.format("[%s - %s:%d - %s]: %s",username, ipAddress, port, timestamp, userMessage);
 
@@ -152,16 +141,20 @@ public class Client {
 	public static void quitWait() {
 		new Thread(() -> 
 		{
-			
+			try (Scanner quitScanner = new Scanner(System.in)) {
 			while(true) {
-				if (console.readLine().equalsIgnoreCase("/quit")) {
-					try {
+				if (quitScanner.nextLine().equalsIgnoreCase("/quit")) {
 						socket.close();
-						} catch (IOException e) {
-						e.printStackTrace();
+						System.out.println("Serveur Fermé.");
 					}
+				Thread.sleep(100);
 				}
 			}
+		catch (IOException e){
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		}).start();
 		
 	}

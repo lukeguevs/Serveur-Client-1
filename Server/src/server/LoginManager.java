@@ -7,7 +7,6 @@ public class LoginManager {
 	
 	private static final String USER_FILE = "usagers.csv";
 	private static Map<String, String> users;
-	private static BufferedWriter bufferWriter;
 	private static BufferedReader bufferReader;
 	
 	public LoginManager() {
@@ -57,7 +56,7 @@ public class LoginManager {
 	public boolean authenticate(String username, String password) {
 		if (!users.containsKey(username)) 
 			return register(username, password);
-		return users.get(username) == password;
+		return users.get(username).equals(password);
 	}
 	
 	

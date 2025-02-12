@@ -4,6 +4,8 @@ import java.util.*;
 import java.io.*;
 import java.util.regex.Pattern;
 
+//0.0.0.0
+
 
 public class Server {
 	
@@ -51,14 +53,16 @@ public class Server {
 			System.out.format("Le serveur roule sur l'addresse IP %s et le port %d\n", ipAddress, port);
 			running = true;
 			
-		quittingOperation();
 		
 		handleClientLogin();
+		quittingOperation();
 		
 	}
 		
 		catch (IOException e) {
-		System.out.println("Erreur lors du démarrage du serveur: " + e.getMessage());
+			System.out.println("Erreur lors du démarrage du serveur: " + e.getMessage());
+			closeServer();
+		
 		}
 	}
 	
@@ -88,39 +92,52 @@ public class Server {
 	}
 	
 	public static void handleClientLogin() {
+	    try {
+	        while (running) {
+	            Socket clientSocket = serverSocket.accept();
+	          if (clientSocket != null) {
+	            new Thread(() -> {
+	                try (
+	                    BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+	                    PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true)
+	                ) {
+	                    System.out.println("Nouveau client connecté, réception de l'authentification...");
+	                    String[] loginCredentials = reader.readLine().split(",");
+	                    
+	                    if (loginCredentials.length < 2) {
+	                        writer.println("AUTH_FAILED");
+	                        System.out.println("Échec de l'authentification: Données invalides.");
+	                        clientSocket.close();
+	                        return;
+	                    }
 
-		try {
-		    while (running) {
-		        Socket clientSocket = serverSocket.accept();
-		        BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-		        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+	                    String username = loginCredentials[0];
+	                    String password = loginCredentials[1];
 
-		        System.out.println("Nouveau client connecté, réception de l'authentification...");
-		        String[] loginCredentials = reader.readLine().split(",");
-		        String username = loginCredentials[0];
-		        String password = loginCredentials[1];
+	                    boolean authenticated = loginManager.authenticate(username, password);
+	                    if (authenticated) {
+	                        System.out.println("Utilisateur " + username + " connecté.");
+	                        writer.println("AUTH_SUCCESS");
 
-		        boolean authenticated = loginManager.authenticate(username, password);
-		        if (authenticated) {
-		            System.out.println("Utilisateur " + username + " connecté.");
-		            ClientHandler clientHandler = new ClientHandler(clientSocket, chatHistory);
-		            clients.add(clientHandler);
-		            new Thread(clientHandler).start();
-		        } else {
-		            System.out.println("Échec de l'authentification pour " + username);
-		            try {
-		                writer.write("AUTH_FAILED\n");
-		                writer.flush();
-		            } catch (IOException e) {
-		                e.printStackTrace();
-		            }
-		        }
-		    }
-		}
-		catch(IOException e) {
-			System.out.println("Échec de l'authentification: " + e.getMessage());
-		}
+	                        ClientHandler clientHandler = new ClientHandler(clientSocket, chatHistory);
+	                        new Thread(clientHandler).start();
+
+	                    } else {
+	                        System.out.println("Échec de l'authentification pour " + username);
+	                        writer.println("AUTH_FAILED");
+	                        clientSocket.close();
+	                    }
+	                } catch (IOException e) {
+	                    System.out.println("Erreur lors du traitement de l'authentification: " + e.getMessage());
+	                }
+	            }).start();
+	          }
+	        }
+	    } catch (IOException e) {
+	        System.out.println("Erreur lors de l'attente des connexions: " + e.getMessage());
+	    }
 	}
+
 
 	public static void broadcastMessage(String message) {
 		for (ClientHandler client : clients) {
