@@ -16,17 +16,17 @@ public class Server {
 	static String ipAddress;
 	static int port;
 	private static boolean running = true;
-	private static LoginManager loginManager;
+	LoginManager loginManager;
 	private static final List<ClientHandler> clients = new ArrayList<>();
 	private static ChatHistory chatHistory = new ChatHistory();
 	
-	
-	public static void main (String[] args){
+	public Server() {
 		loginManager = new LoginManager();
 		serverLaunch();
 	}
 	
-	public static void serverLaunch()  {
+	
+	public void serverLaunch()  {
 		
 	try {
 		System.out.print("Entrez l'addresse IP du serveur: \n");
@@ -66,7 +66,7 @@ public class Server {
 		}
 	}
 	
-	public static void closeServer() {
+	public void closeServer() {
 		running = false;
 		
 		try{
@@ -79,7 +79,7 @@ public class Server {
 		
 	}
 	
-	public static void quittingOperation() {
+	public void quittingOperation() {
 		new Thread(() -> 
 		{
 			while(true) {
@@ -91,61 +91,52 @@ public class Server {
 		}).start();
 	}
 	
-	public static void handleClientLogin() {
-	    try {
-	        while (running) {
-	            Socket clientSocket = serverSocket.accept();
-	          if (clientSocket != null) {
-	            new Thread(() -> {
-	                try (
-	                    BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-	                    PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true)
-	                ) {
-	                    System.out.println("Nouveau client connecté, réception de l'authentification...");
-	                    String[] loginCredentials = reader.readLine().split(",");
-	                    
-	                    if (loginCredentials.length < 2) {
-	                        writer.println("AUTH_FAILED");
-	                        System.out.println("Échec de l'authentification: Données invalides.");
-	                        clientSocket.close();
-	                        return;
-	                    }
+	public void handleClientLogin() {
+		try {
+		    while (running) {
+		        Socket clientSocket = serverSocket.accept();
+		        if (clientSocket != null) {
+		            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+		            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
 
-	                    String username = loginCredentials[0];
-	                    String password = loginCredentials[1];
+		            System.out.println("Nouveau client connecté, réception de l'authentification...");
+		            String[] loginCredentials = reader.readLine().split(",");
 
-	                    if (loginManager.authenticate(username, password)) {
-	                        System.out.println("Utilisateur " + username + " connecté.");
-	                        writer.println("AUTH_SUCCESS");
+		            if (loginCredentials.length < 2) {
+		                writer.println("AUTH_FAILED");
+		                System.out.println("Échec de l'authentification: Données invalides.");
+		                clientSocket.close();
+		                continue;
+		            }
 
-	                        ClientHandler clientHandler = new ClientHandler(clientSocket, chatHistory);
-	                        new Thread(clientHandler).start();
+		            String username = loginCredentials[0];
+		            String password = loginCredentials[1];
 
-	                    } else {
-	                        System.out.println("Échec de l'authentification pour " + username);
-	                        writer.println("AUTH_FAILED");
-	                        clientSocket.close();
-	                    }
-	                } catch (IOException e) {
-	                    System.out.println("Erreur lors du traitement de l'authentification: " + e.getMessage());
-	                }
-	            }).start();
-	          }
-	        }
-	    } catch (IOException e) {
-	        System.out.println("Erreur lors de l'attente des connexions: " + e.getMessage());
-	    }
+		            if (loginManager.authenticate(username, password)) {
+		                System.out.println("Utilisateur " + username + " connecté.");
+		                writer.println("AUTH_SUCCESS");
+
+		                ClientHandler clientHandler = new ClientHandler(clientSocket, chatHistory, this);
+		                new Thread(clientHandler).start();
+
+		            } else {
+		                System.out.println("Échec de l'authentification pour " + username);
+		                writer.println("AUTH_FAILED");
+		                clientSocket.close();
+		            }
+		        }
+		    }
+		} catch (IOException e) {
+		    System.out.println("Erreur lors de l'attente des connexions: " + e.getMessage());
+		}
+
 	}
 
 
-	public static void broadcastMessage(String message) {
-		for (ClientHandler client : clients) {
-            client.sendMessage(message);
-        }
-		
-		
-		
-		
+	public void broadcastMessage(String message) {
+//		for (ClientHandler client : clients) {
+//            client.sendMessage(message);
+//        }
 	}
 	
 }

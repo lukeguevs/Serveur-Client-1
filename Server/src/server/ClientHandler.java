@@ -6,14 +6,17 @@ import java.time.LocalDateTime;
 
 
 public class ClientHandler implements Runnable {
+	private Server server;
 	private Socket socket;
 	private static ChatHistory chat;
-	private static PrintWriter writer;
-    private static BufferedReader reader;
+	private PrintWriter writer;
+    private BufferedReader reader;
 	
-	public ClientHandler(Socket socket, ChatHistory chatHistory) {
+	public ClientHandler(Socket socket, ChatHistory chatHistory, Server server) {
 		this.socket = socket;
 		ClientHandler.chat = chatHistory;
+		this.server = server;
+		
 	}
 	
 	 @Override
@@ -25,12 +28,18 @@ public class ClientHandler implements Runnable {
                  String message;
                  while ((message = reader.readLine()) != null) {
                      System.out.println(message);
-                     Server.broadcastMessage(message);
+                     server.broadcastMessage(message);
                  }
                  
          }
          catch(IOException e) {
         	 System.out.print("Error at handlingClient: " + e.getMessage() + "\n");
+        	 try {
+				this.socket.close();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+        	 
          }
          
 	 }

@@ -14,7 +14,7 @@ public class LoginManager {
 		loadUsers();
 	}
 	
-	public static void loadUsers() {
+	public void loadUsers() {
 		
 		try {
 			
