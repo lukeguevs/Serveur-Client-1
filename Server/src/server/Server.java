@@ -114,8 +114,7 @@ public class Server {
 	                    String username = loginCredentials[0];
 	                    String password = loginCredentials[1];
 
-	                    boolean authenticated = loginManager.authenticate(username, password);
-	                    if (authenticated) {
+	                    if (loginManager.authenticate(username, password)) {
 	                        System.out.println("Utilisateur " + username + " connecté.");
 	                        writer.println("AUTH_SUCCESS");
 

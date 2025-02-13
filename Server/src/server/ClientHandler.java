@@ -30,7 +30,7 @@ public class ClientHandler implements Runnable {
                  
          }
          catch(IOException e) {
-        	 System.out.print("Error at handlingClient: " + e.getMessage());
+        	 System.out.print("Error at handlingClient: " + e.getMessage() + "\n");
          }
          
 	 }
