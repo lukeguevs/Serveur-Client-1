@@ -117,6 +117,7 @@ public class Server {
 		                writer.println("AUTH_SUCCESS");
 
 		                ClientHandler clientHandler = new ClientHandler(clientSocket, chatHistory, this);
+		                clients.add(clientHandler);
 		                new Thread(clientHandler).start();
 
 		            } else {
@@ -134,9 +135,9 @@ public class Server {
 
 
 	public void broadcastMessage(String message) {
-//		for (ClientHandler client : clients) {
-//            client.sendMessage(message);
-//        }
+		for (ClientHandler client : clients) {
+	           client.sendMessage(message);
+	      }
 	}
 	
 }

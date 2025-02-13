@@ -45,6 +45,7 @@ public class ClientHandler implements Runnable {
 	 }
      public void sendMessage(String message) {
          writer.println(message);
+         writer.flush();
          ClientHandler.chat.addMessage(message);
      }
      

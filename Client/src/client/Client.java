@@ -22,29 +22,19 @@ public class Client {
 	
 	static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd@HH:mm:ss");
 	
-	public static void main (String[] args) throws IOException{
+	public Client() throws IOException {
 		connectToServer();
-		quitWait();
+		quit();
 	}
 	
-	public static void connectToServer() throws IOException  {
+	
+	
+	public  void connectToServer() throws IOException  {
 		
 		try {
 			System.out.println("Entrez l'addresse IP du serveur: ");
 			
-			while(true) {
-				ipAddress = inputReader.readLine();
-				if (Pattern.matches(IP_REGEX, ipAddress)) break;
-				System.out.println("Addresse IP invalide. Réessayez: \n");
-			}
-			
-			System.out.print("Entrez un port entre 5000 et 5050: ");
-			
-			while(true) {
-				port = Integer.parseInt(inputReader.readLine());
-				if (5000 <= port && port <= 5050) break;
-				System.out.println("Port invalide. Réessayez: ");
-			}
+				ipAndPortConnect();
 		
 				socket = new Socket();
 				socket.setReuseAddress(true);
@@ -61,8 +51,8 @@ public class Client {
 				
 	            if (authenticated) {
 	            	System.out.print("Vous êtes connecté.e au serveur.\n");
-	                new Thread(Client::receiveMessages).start();
-	                sendMessages();
+	            	new Thread(this.receiveMessages()).start();
+	            	sendMessages();
 	                break;
 	            } else {
 	                System.out.println("Mauvais mot de passe, déconnexion...");
@@ -83,7 +73,7 @@ public class Client {
 	
 	
 	
-	public static boolean authenticate() throws InterruptedException {
+	public  boolean authenticate() throws InterruptedException {
 		
 		try {
             System.out.print("Nom d'utilisateur: ");
@@ -101,7 +91,7 @@ public class Client {
 		}
 	}
 	
-	public static void sendMessages() {
+	public void sendMessages() {
 	    if (printWriter == null) {
 	        System.out.println("Erreur : connexion non établie.");
 	        return;
@@ -110,10 +100,11 @@ public class Client {
 	    try {
 	        String userMessage;
 	        while (true) {
-	            System.out.print(">\n");
+	            System.out.print(">");
 	            userMessage = inputReader.readLine();
 	            String timestamp = LocalDateTime.now().format(formatter);
-	            printWriter.format("[%s - %s:%d - %s]: %s",username, ipAddress, port, timestamp, userMessage);
+	            printWriter.format("[%s - %s:%d - %s]: %s\n",username, ipAddress, port, timestamp, userMessage);
+	            printWriter.flush();
 
 	            if (printWriter.checkError()) {
 	                System.out.println("Erreur d'écriture. Connexion fermée.");
@@ -125,20 +116,21 @@ public class Client {
 	    }
 	}
 	
-	public static void receiveMessages() {
-		try {
-			String message;
-			while((message = reader.readLine()) != null) {
-				System.out.println("\n" + message);
-			}
-			
-		}
-		catch(IOException e) {
-			System.out.println("Erreur lors de la réception du message: " + e.getMessage());
-		}
+	public Runnable receiveMessages() {
+	    return () -> {
+	        try {
+	            String message;
+	            while ((message = reader.readLine()) != null) {
+	                System.out.println("\n" + message + "\n>");
+	            }
+	        } catch (IOException e) {
+	            System.out.println("Erreur lors de la réception du message: " + e.getMessage());
+	        }
+	    };
 	}
+
 	
-	public static void quitWait() {
+	public void quit() {
 		new Thread(() -> 
 		{
 			try (Scanner quitScanner = new Scanner(System.in)) {
@@ -146,6 +138,7 @@ public class Client {
 				if (quitScanner.nextLine().equalsIgnoreCase("/quit")) {
 						socket.close();
 						System.out.println("Serveur Fermé.");
+						break;
 					}
 				Thread.sleep(100);
 				}
@@ -160,5 +153,26 @@ public class Client {
 	}
 	
 	
+	public void ipAndPortConnect(){
+		
+		try{
+			while(true) {
+				ipAddress = inputReader.readLine();
+				if (Pattern.matches(IP_REGEX, ipAddress)) break;
+				System.out.println("Addresse IP invalide. Réessayez: \n");
+			}
+			
+			System.out.print("Entrez un port entre 5000 et 5050: ");
+			
+			while(true) {
+				port = Integer.parseInt(inputReader.readLine());
+				if (5000 <= port && port <= 5050) break;
+				System.out.println("Port invalide. Réessayez: ");
+			}
+		}
+		catch(IOException e) {
+			System.out.print(e.getStackTrace());
+		}
+	}
 	
 }
