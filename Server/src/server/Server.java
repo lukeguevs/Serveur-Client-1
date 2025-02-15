@@ -119,6 +119,7 @@ public class Server {
 		                ClientHandler clientHandler = new ClientHandler(clientSocket, chatHistory, this);
 		                clients.add(clientHandler);
 		                new Thread(clientHandler).start();
+		                
 		                clientHandler.sendLastMessages();
 
 		            } else {

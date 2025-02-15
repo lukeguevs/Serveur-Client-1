@@ -25,6 +25,7 @@ public class ClientHandler implements Runnable {
          try {
         	 reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
              writer = new PrintWriter(socket.getOutputStream(), true);
+             sendLastMessages();
 
                  String message;
                  while ((message = reader.readLine()) != null) {
