@@ -119,6 +119,7 @@ public class Server {
 		                ClientHandler clientHandler = new ClientHandler(clientSocket, chatHistory, this);
 		                clients.add(clientHandler);
 		                new Thread(clientHandler).start();
+		                clientHandler.sendLastMessages();
 
 		            } else {
 		                System.out.println("Échec de l'authentification pour " + username);
@@ -133,11 +134,13 @@ public class Server {
 
 	}
 
-
+ 
 	public void broadcastMessage(String message) {
 		for (ClientHandler client : clients) {
 	           client.sendMessage(message);
 	      }
+		chatHistory.addMessage(message);
 	}
 	
 }
+
