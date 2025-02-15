@@ -55,15 +55,12 @@ public class ChatHistory {
 	}
 	
 	public void addMessage(String message) {
-		try {
-			bufferWriter = new BufferedWriter(new FileWriter(MESSAGE_FILE, true));
-			bufferWriter.write(message);
-			bufferWriter.newLine();
-		}
-		
-		catch(IOException e) {
-			System.err.println("Erreur lors de l'ajout d'un message: " + e.getMessage());
-		}
+	    try (BufferedWriter bufferWriter = new BufferedWriter(new FileWriter(MESSAGE_FILE, true))) {
+	        bufferWriter.write(message);
+	        bufferWriter.newLine();
+	    } catch (IOException e) {
+	        System.err.println("Erreur lors de l'ajout d'un message: " + e.getMessage());
+	    }
 	}
 	
 

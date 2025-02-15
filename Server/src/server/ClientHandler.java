@@ -8,13 +8,13 @@ import java.time.LocalDateTime;
 public class ClientHandler implements Runnable {
 	private Server server;
 	private Socket socket;
-	private static ChatHistory chat;
+	private  ChatHistory chat;
 	private PrintWriter writer;
     private BufferedReader reader;
 	
 	public ClientHandler(Socket socket, ChatHistory chatHistory, Server server) {
 		this.socket = socket;
-		ClientHandler.chat = chatHistory;
+		this.chat = chatHistory;
 		this.server = server;
 		
 	}
@@ -46,7 +46,7 @@ public class ClientHandler implements Runnable {
      public void sendMessage(String message) {
          writer.println(message);
          writer.flush();
-         ClientHandler.chat.addMessage(message);
+         this.chat.addMessage(message);
      }
      
 //     public static void sendLastMessages() {

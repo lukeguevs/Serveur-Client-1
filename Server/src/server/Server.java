@@ -18,7 +18,7 @@ public class Server {
 	private static boolean running = true;
 	LoginManager loginManager;
 	private static final List<ClientHandler> clients = new ArrayList<>();
-	private static ChatHistory chatHistory = new ChatHistory();
+	private ChatHistory chatHistory = new ChatHistory();
 	
 	public Server() {
 		loginManager = new LoginManager();
