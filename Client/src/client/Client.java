@@ -49,17 +49,17 @@ public class Client {
 				while(true) {
 					boolean authenticated = authenticate();
 				
-	            if (authenticated) {
-	            	System.out.print("Vous êtes connecté.e au serveur.\n");
-	            	new Thread(this.receiveMessages()).start();
-	            	sendMessages();
-	                break;
-	            } else {
-	                System.out.println("Mauvais mot de passe, déconnexion...");
-	                socket.close();
-	                break;
-	            }
-			}	
+		            if (authenticated) {
+		            	System.out.print("Vous êtes connecté.e au serveur.\n");
+		            	new Thread(this.receiveMessages()).start();
+		            	sendMessages();
+		                break;
+		            } else {
+		                System.out.println("Mauvais mot de passe, déconnexion...");
+		                socket.close();
+		                break;
+		            }
+				}	
 		 }
 			
 			catch (IOException e) {
@@ -75,20 +75,33 @@ public class Client {
 	
 	public  boolean authenticate() throws InterruptedException {
 		
-		try {
-            System.out.print("Nom d'utilisateur: ");
-            username = inputReader.readLine();
-            System.out.print("Mot de passe: ");
-            password = inputReader.readLine();
-            printWriter.println(username + "," + password);
-            return reader.readLine().equals("AUTH_SUCCESS");
-           
-		}
-		catch(IOException e) {
-			System.out.println("Erreur lors de l'authentification au serveur: " + e.getMessage());
-			return false;
-			
-		}
+		int attempts = 0;
+	    try {
+	        while (attempts < 3) {
+	            System.out.print("Nom d'utilisateur: ");
+	            username = inputReader.readLine();
+	            System.out.print("Mot de passe: ");
+	            password = inputReader.readLine();
+	            printWriter.println(username + "," + password);
+	            
+	            String response = reader.readLine();
+	            if (response.equals("AUTH_SUCCESS")) {
+	                return true;
+	            } else if (response.equals("AUTH_MAX_ATTEMPTS")) {
+	                System.out.println("Échec de l'authentification après 3 tentatives.");
+	                return false;
+	            } else if (response.startsWith("AUTH_FAILED")) {
+	                attempts++;
+	                String[] parts = response.split(",");
+	                int remainingAttempts = parts.length > 1 ? Integer.parseInt(parts[1]) : 3 - attempts;
+	                System.out.println("Mauvais mot de passe, tentatives restantes: " + remainingAttempts);
+	            }
+	        }
+	        return false; 
+	    } catch (IOException e) {
+	        System.out.println("Erreur lors de l'authentification au serveur: " + e.getMessage());
+	        return false;
+	    }
 	}
 	
 	public void sendMessages() {

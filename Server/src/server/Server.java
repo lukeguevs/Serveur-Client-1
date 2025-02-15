@@ -93,45 +93,63 @@ public class Server {
 	
 	public void handleClientLogin() {
 		try {
-		    while (running) {
-		        Socket clientSocket = serverSocket.accept();
-		        if (clientSocket != null) {
-		            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-		            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
+	        while (running) {
+	            Socket clientSocket = serverSocket.accept();
+	            if (clientSocket != null) {
+	                BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+	                PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
 
-		            System.out.println("Nouveau client connecté, réception de l'authentification...");
-		            String[] loginCredentials = reader.readLine().split(",");
+	                System.out.println("Nouveau client connecté, réception de l'authentification...");
+	                
+	                boolean authenticated = false;
+	                int attempts = 0;
+	                
+	                while (attempts < 3 && !authenticated) {
+	                    String credentials = reader.readLine();
+	                    if (credentials == null) break;
+	                    
+	                    String[] loginCredentials = credentials.split(",");
+	                    
+	                    if (loginCredentials.length < 2) {
+	                        writer.println("AUTH_FAILED");
+	                        System.out.println("Échec de l'authentification: Données invalides.");
+	                        attempts++;
+	                        continue;
+	                    }
 
-		            if (loginCredentials.length < 2) {
-		                writer.println("AUTH_FAILED");
-		                System.out.println("Échec de l'authentification: Données invalides.");
-		                clientSocket.close();
-		                continue;
-		            }
+	                    String username = loginCredentials[0];
+	                    String password = loginCredentials[1];
 
-		            String username = loginCredentials[0];
-		            String password = loginCredentials[1];
+	                    if (loginManager.authenticate(username, password)) {
+	                        System.out.println("Utilisateur " + username + " connecté.");
+	                        writer.println("AUTH_SUCCESS");
+	                        authenticated = true;
 
-		            if (loginManager.authenticate(username, password)) {
-		                System.out.println("Utilisateur " + username + " connecté.");
-		                writer.println("AUTH_SUCCESS");
-
-		                ClientHandler clientHandler = new ClientHandler(clientSocket, chatHistory, this);
-		                clients.add(clientHandler);
-		                new Thread(clientHandler).start();
-		                
-		                clientHandler.sendLastMessages();
-
-		            } else {
-		                System.out.println("Échec de l'authentification pour " + username);
-		                writer.println("AUTH_FAILED");
-		                clientSocket.close();
-		            }
-		        }
-		    }
-		} catch (IOException e) {
-		    System.out.println("Erreur lors de l'attente des connexions: " + e.getMessage());
-		}
+	                        ClientHandler clientHandler = new ClientHandler(clientSocket, chatHistory, this);
+	                        clients.add(clientHandler);
+	                        new Thread(clientHandler).start();
+	                        
+	                        clientHandler.sendLastMessages();
+	                    } else {
+	                        attempts++;
+	                        System.out.println("Échec de l'authentification pour " + username + " (tentative " + attempts + "/3)");
+	                        if (attempts < 3) {
+	                            writer.println("AUTH_FAILED," + (3 - attempts));
+	                        } else {
+	                            writer.println("AUTH_MAX_ATTEMPTS");
+	                            clientSocket.close();
+	                        }
+	                    }
+	                }
+	                
+	                if (!authenticated && !clientSocket.isClosed()) {
+	                    clientSocket.close();
+	                }
+	            }
+	        }
+	    } catch (IOException e) {
+	        System.out.println("Erreur lors de l'attente des connexions: " + e.getMessage());
+	    }
 
 	}
 
