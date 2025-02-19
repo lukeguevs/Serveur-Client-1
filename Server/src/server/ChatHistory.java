@@ -4,7 +4,6 @@ import java.util.*;
 
 public class ChatHistory {
 	private static final String MESSAGE_FILE = "messages.csv";
-	private static int maxMessages = 15;
 	public static List<String> messages;
 	private static BufferedReader bufferReader;
 	

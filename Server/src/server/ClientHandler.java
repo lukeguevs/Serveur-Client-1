@@ -48,24 +48,22 @@ public class ClientHandler implements Runnable {
      public void sendMessage(String message) {
          writer.println(message);
          writer.flush();
-         //this.chat.addMessage(message);
      }
      
      public void sendLastMessages() {
     	 if (writer != null) {
-    	        List<String> allMessages = chat.getMessages(); 
+  	 
+		    List<String> allMessages = chat.getMessages(); 
 
-    	        if (allMessages.size() > 0) {
-    	            writer.println("Voici les 15 derniers messages:");
-    	            for (int i = Math.max(0, allMessages.size() - 15); i < allMessages.size(); i++) {
-    	                writer.println(allMessages.get(i));
-    	            }
-    	            writer.println("Fin des 15 derniers messages.");
-    	            writer.flush();
-    	        }
-    	    } else {
-    	        System.err.println("Erreur : PrintWriter non initialisé.");
-    	    }
+		    if (allMessages.size() > 0) {
+		        writer.println("Voici les 15 derniers messages:");
+		        for (int i = Math.max(0, allMessages.size() - 15); i < allMessages.size(); i++) {
+		            writer.println(allMessages.get(i));
+		        }
+		        writer.println("Fin des 15 derniers messages.");
+		        writer.flush();
+		    }
+		}
      }
      
      
