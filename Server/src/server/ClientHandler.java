@@ -59,6 +59,7 @@ public class ClientHandler implements Runnable {
 		        writer.println("Voici les 15 derniers messages:");
 		        for (int i = Math.max(0, allMessages.size() - 15); i < allMessages.size(); i++) {
 		            writer.println(allMessages.get(i));
+		            writer.flush();
 		        }
 		        writer.println("Fin des 15 derniers messages.");
 		        writer.flush();
