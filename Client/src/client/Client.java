@@ -115,6 +115,11 @@ public class Client {
 	        while (true) {
 	            System.out.print(">");
 	            userMessage = inputReader.readLine();
+	            if (userMessage.equals("/quit")) {
+	            	socket.close();
+	            	System.out.print("Déconnexion...");
+	            	break;
+	            }
 	            String timestamp = LocalDateTime.now().format(formatter);
 	            printWriter.format("[%s - %s:%d - %s]: %s\n",username, ipAddress, port, timestamp, userMessage);
 	            printWriter.flush();

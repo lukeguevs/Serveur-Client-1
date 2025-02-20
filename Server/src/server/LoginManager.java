@@ -58,8 +58,5 @@ public class LoginManager {
 			return register(username, password);
 		return users.get(username).equals(password);
 	}
-	
-	
-	
 
 }
