@@ -85,7 +85,7 @@ public class Server {
 			while(true) {
 				if (scanner.nextLine().equalsIgnoreCase("/quit")) {
 					closeServer();
-					break;
+					return;
 				}
 			}
 		}).start();
